@@ -64,17 +64,17 @@ export default function App() {
 
   // Load data on mount
   useEffect(() => {
-    const data = loadData();
-    setRoutes(data.length ? data : SEED_DATA);
-    setLoaded(true);
-  }, []);
+      loadData().then((data) => {
+        setRoutes(data.length ? data : []);
+        setLoaded(true);
+      });
+    }, []);
 
-  // Save data when routes change (if loaded)
-  useEffect(() => {
-    if (loaded) {
-      saveData(routes);
-    }
-  }, [routes, loaded]);
+    useEffect(() => {
+      if (loaded && routes.length > 0) {
+        routes.forEach((route) => saveData(route));
+      }
+    }, [routes, loaded]);
 
   // Set initial view when user changes
   useEffect(() => {

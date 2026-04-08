@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { USERS } from "../lib/constants";
+import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 
@@ -8,42 +8,76 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for saved session
-    const saved = localStorage.getItem("mediciones-user");
-    if (saved) {
-      try {
-        setUser(JSON.parse(saved));
-      } catch {}
-    }
-    setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (username, password) => {
-    const u = username.trim().toLowerCase();
-    const p = password.trim();
-    const found = USERS.find((usr) => usr.username === u && usr.password === p);
-    if (found) {
-      const userData = { id: found.id, name: found.name, role: found.role, city: found.city, username: found.username };
-      setUser(userData);
-      localStorage.setItem("mediciones-user", JSON.stringify(userData));
-      return { success: true };
+  const fetchProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (data && !error) {
+      setUser({ id: data.id, name: data.name, role: data.role, city: data.city, username: data.username });
     }
-    return { success: false, error: "Usuario o contraseña incorrectos" };
+    setLoading(false);
   };
 
-  const logout = () => {
+  const login = async (username, password) => {
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", username.trim().toLowerCase())
+      .single();
+
+    if (profileError || !profileData) {
+      return { success: false, error: "Usuario o contraseña incorrectos" };
+    }
+
+    const { data: userData, error: authError } = await supabase
+      .from("auth.users")
+      .select("email")
+      .eq("id", profileData.id)
+      .single();
+
+    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: username.includes("@") ? username : `${username}@termprotect.es`,
+      password: password.trim(),
+    });
+
+    if (signInError) {
+      return { success: false, error: "Usuario o contraseña incorrectos" };
+    }
+
+    return { success: true };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("mediciones-user");
   };
 
-  const changePassword = (currentPwd, newPwd) => {
-    // In production this will use Supabase Auth
-    const found = USERS.find((u) => u.id === user.id);
-    if (!found || found.password !== currentPwd) {
-      return { success: false, error: "La contraseña actual no es correcta" };
-    }
-    // For mock: update in memory (won't persist page reload since USERS is const)
-    found.password = newPwd;
+  const changePassword = async (currentPwd, newPwd) => {
+    const { error } = await supabase.auth.updateUser({ password: newPwd });
+    if (error) return { success: false, error: error.message };
     return { success: true };
   };
 
