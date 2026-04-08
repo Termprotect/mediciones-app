@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FACC15;
+  --color-primary-hover: #EAB308;
+  --color-dark: #161E2B;
+  --color-surface: #1E293B;
+  --color-background: #0F172A;
+  --color-muted: #94A3B8;
+  --color-success: #22C55E;
+  --color-danger: #EF4444;
+  --color-warning: #F97316;
+  --color-border: #334155;
+  --color-surface-hover: #253349;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: #FFFFFF;
+  color-scheme: dark;
+}
+
+/* Fix native input icons (date, time) for dark theme */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+select {
+  color-scheme: dark;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-dark); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
