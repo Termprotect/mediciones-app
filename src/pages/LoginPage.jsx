@@ -10,15 +10,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError("Introduce usuario y contraseña");
-      return;
-    }
-    const result = login(username, password);
-    if (!result.success) setError(result.error);
-  };
+  const handleLogin = async (e) => {
+      e.preventDefault();
+      if (!username.trim() || !password.trim()) {
+        setError("Introduce usuario y contraseña");
+        return;
+      }
+      const result = await login(username, password);
+      if (!result.success) setError(result.error);
+    };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
