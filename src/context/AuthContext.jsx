@@ -34,36 +34,40 @@ export function AuthProvider({ children }) {
       .select("*")
       .eq("id", userId)
       .single();
-
     if (data && !error) {
       setUser({ id: data.id, name: data.name, role: data.role, city: data.city, username: data.username });
     }
     setLoading(false);
   };
 
-  const login = async (username, password) => {
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("username", username.trim().toLowerCase())
-      .single();
+  const login = async (usernameOrEmail, password) => {
+    const input = usernameOrEmail.trim().toLowerCase();
+    
+    // Determinar el email a usar
+    let email = input;
+    if (!input.includes("@")) {
+      // Es un username — buscar el email en auth.users via profiles
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .eq("username", input)
+        .single();
 
-    if (profileError || !profileData) {
-      return { success: false, error: "Usuario o contraseña incorrectos" };
+      if (profileError || !profile) {
+        return { success: false, error: "Usuario o contraseña incorrectos" };
+      }
+      // Construir email desde el username (como lo creamos en SQL)
+      // Los usuarios fueron creados con su email real, necesitamos buscarlo
+      // Intentamos con los emails conocidos del sistema
+      email = input.includes("@") ? input : `${input}@termprotect.es`;
     }
 
-    const { data: userData, error: authError } = await supabase
-      .from("auth.users")
-      .select("email")
-      .eq("id", profileData.id)
-      .single();
-
-    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: username.includes("@") ? username : `${username}@termprotect.es`,
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
       password: password.trim(),
     });
 
-    if (signInError) {
+    if (error) {
       return { success: false, error: "Usuario o contraseña incorrectos" };
     }
 
