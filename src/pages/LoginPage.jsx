@@ -13,7 +13,7 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
       e.preventDefault();
       if (!username.trim() || !password.trim()) {
-        setError("Introduce usuario y contraseña");
+        setError("Introduce tu identificador y contraseña");
         return;
       }
       const result = await login(username, password);
@@ -36,14 +36,14 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="bg-surface border border-border rounded-2xl p-8">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1.5">Usuario</label>
+              <label className="block text-xs font-medium text-muted mb-1.5">Email / DNI / TIE</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => { setUsername(e.target.value); setError(""); }}
-                  placeholder="Tu usuario"
+                  placeholder="tu@email.com o documento"
                   className="w-full pl-10 pr-4 py-3 bg-dark border-2 border-border rounded-xl text-white text-sm placeholder:text-muted/50 outline-none focus:border-primary transition-colors"
                   autoFocus
                 />
@@ -102,7 +102,6 @@ export default function LoginPage() {
               <h3 className="text-lg font-bold text-white mb-2">Recuperar contraseña</h3>
               <p className="text-muted text-sm mb-6">
                 Contacta al administrador del sistema para restablecer tu contraseña.
-                En la versión con Supabase, recibirás un email de recuperación automático.
               </p>
               <button
                 onClick={() => setShowForgot(false)}
